@@ -12,7 +12,9 @@
 ## Sử dụng nhanh
 
 - `MENU → 1`: tính toán thông thường; `MENU → 5`: Vector.
-- Trong Vector, chọn `VctA`–`VctD`, chọn 2 hoặc 3 chiều rồi nhập lần lượt từng tọa độ bằng `=`. Bấm `AC` để sang vùng tính toán, `OPTN` để chọn vector hoặc toán tử; `▼` khi menu `OPTN` mở để xem trang tiếp.
+- Trong Vector, chọn `VctA`–`VctD`, bấm `2` để chọn **2 chiều** hoặc `3` để chọn **3 chiều**, rồi nhập từng tọa độ bằng `=`. Bấm `AC` để sang vùng tính toán, `OPTN` để chọn vector hoặc toán tử; `▼` khi menu `OPTN` mở để xem trang tiếp.
+- Thống kê ghép nhóm (ước lượng từ bảng khoảng lớp): `MENU → 6 → 9`, nhập **cận dưới → = → cận trên → = → tần số → =** cho từng lớp, `AC` để xem kết quả. Các lớp không được chồng nhau; trung bình, độ lệch chuẩn, phân vị và mốt được **ước lượng** từ khoảng và tần số, không phải số liệu gốc hay kết quả đã đối chiếu máy thật.
+- Trong `MENU`, dùng `▶` từ `9` để tới `A` (Bất phương trình), tiếp tới `B`, `C`; bấm `=` để vào chế độ đang chọn.
 - `SHIFT + ∫dx`: mẫu đạo hàm; `∫dx`: mẫu tích phân xác định. `SHIFT + CALC`: SOLVE.
 - `OPTN` phụ thuộc vào chế độ hiện tại. Các chi tiết hiển thị và phím bấm cần tiếp tục đối chiếu với fx-580VN X thật.
 
@@ -24,7 +26,7 @@ Yêu cầu Node.js có sẵn `node:test` (khuyến nghị Node 20+). Không cầ
 node --test tests/*.test.mjs
 ```
 
-Bộ kiểm thử hiện có bao phủ đạo hàm số, tích phân xác định, nhập mẫu tích phân, SOLVE, Vector 2D/3D (tạo và tính toán, OPTN, VctAns, lỗi chiều), menu OPTN thông thường và kiểm tra hai file HTML đồng bộ. Đây là **regression test**, không phải chứng nhận độ chính xác của mọi chế độ. Các trường hợp chưa tự động hóa cần so sánh trực tiếp với máy thật: thao tác đầy đủ bằng phím, menu nhiều trang, kết quả hiển thị và hình ảnh LCD.
+Bộ kiểm thử hiện có bao phủ đạo hàm số, tích phân xác định, nhập mẫu tích phân, SOLVE, Vector 2D/3D (tạo và tính toán, OPTN, VctAns, lỗi chiều), thống kê ghép nhóm, điều hướng menu qua A, menu OPTN thông thường và kiểm tra hai file HTML đồng bộ. Đây là **regression test**, không phải chứng nhận độ chính xác của mọi chế độ. Các trường hợp chưa tự động hóa cần so sánh trực tiếp với máy thật: thao tác đầy đủ bằng phím, menu nhiều trang, kết quả hiển thị và hình ảnh LCD.
 
 ## Cấu trúc nguồn
 

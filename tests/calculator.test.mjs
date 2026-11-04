@@ -31,10 +31,16 @@ function calculator() {
   app.vectorState = { activeVct: 'VctA', dim: 3,
     vectors: { VctA: null, VctB: null, VctC: null, VctD: null }, vctAns: null,
     expression: '', optionPage: 0, optionFrom: 'VCT_CALC', selectAction: 'define', cellIdx: 0, buffer: '' };
+  app.statFreq = false;
+  app.stat = { type: 'VAR', rows: [{ x: null, y: null, f: null }], r: 0, c: 0,
+    buffer: '', msg: '', typeScroll: 0, resLines: [], resScroll: 0 };
+  app.menuPage = 1;
+  app.menuSelected = 1;
   app.display = {
     language: 'VI', showView() {}, renderExpression() {}, setResult(result) { this.result = result; },
-    updateIndicators() {}, setScrollArrows() {}, renderList(title, items) { this.title = title; this.items = items; },
-    renderCustom(markup) { this.markup = markup; }
+    updateIndicators() {}, renderList(title, items) { this.title = title; this.items = items; },
+    renderCustom(markup) { this.markup = markup; }, setScrollArrows() {},
+    renderMenu(selected, page) { this.selected = selected; this.page = page; }
   };
   return app;
 }
@@ -45,7 +51,7 @@ function approx(actual, expected, tolerance = 1e-5) {
 function vector(app, name, dim, values) {
   app.vectorState.activeVct = name;
   app.osState = 'VCT_DIM';
-  press(app, dim === 2 ? '1' : '2');
+  press(app, String(dim));
   assert.equal(app.osState, 'VCT_INPUT');
   for (const value of values) { press(app, ...String(value).split(''), 'EQUALS'); }
   assert.deepEqual(Array.from(app.vectorState.vectors[name]), values);
@@ -110,6 +116,19 @@ test('STO không lưu nếu biểu thức không hợp lệ', () => {
   assert.equal(app.display.result, 'Math ERROR');
 });
 
+test('Vector: màn kích thước hiển thị phím 2/3, phím 1 không hợp lệ', () => {
+  const app = calculator();
+  app.vectorState.activeVct = 'VctA';
+  app.osState = 'VCT_DIM';
+  app.renderVectorDim();
+  assert.match(app.display.items.join(' '), /2: 2 chiều/);
+  assert.match(app.display.items.join(' '), /3: 3 chiều/);
+  press(app, '1');
+  assert.equal(app.osState, 'VCT_DIM');
+  press(app, '3');
+  assert.equal(app.vectorState.vectors.VctA.length, 3);
+});
+
 test('Vector: khai báo 2D và 3D, tích vô hướng và độ dài', () => {
   const app = calculator();
   vector(app, 'VctA', 2, [3, 4]);
@@ -149,6 +168,69 @@ test('Vector: từ chối trộn chiều và vector không khi chuẩn hoá', ()
   assert.throws(() => app.evaluateVectorExpression('VctA+VctB'));
   app.vectorState.vectors.VctA = [0, 0];
   assert.throws(() => app.evaluateVectorExpression('UnitV(VctA)'));
+});
+
+test('MENU điều hướng bằng mũi tên từ 9 đến A, B, C rồi chọn A', () => {
+  const app = calculator();
+  app.osState = 'MENU';
+  app.menuPage = 2;
+  app.menuSelected = 9;
+  press(app, 'RIGHT');
+  assert.equal(app.menuSelected, 10);
+  assert.equal(app.display.page, 2);
+  press(app, 'RIGHT', 'RIGHT');
+  assert.equal(app.menuSelected, 12);
+  press(app, 'RIGHT');
+  assert.equal(app.menuSelected, 1);
+  assert.equal(app.display.page, 1);
+  press(app, 'LEFT');
+  assert.equal(app.menuSelected, 12);
+  press(app, 'LEFT', 'LEFT');
+  assert.equal(app.menuSelected, 10);
+});
+
+test('thống kê ghép nhóm: chọn mục 9 sau khi cuộn menu và nhập tần số bằng phím', () => {
+  const app = calculator();
+  app.startStat();
+  for (let i = 0; i < 5; i++) press(app, 'DOWN');
+  assert.match(app.display.items.join(' '), /9:Ghép nhóm/);
+  press(app, '9');
+  assert.equal(app.osState, 'STAT_INPUT');
+  press(app, '0', 'EQUALS', '1', '0', 'EQUALS', '2', 'EQUALS', 'AC');
+  assert.equal(app.osState, 'STAT_RESULT');
+  assert.match(app.stat.resLines.join(' '), /n = 2/);
+});
+
+test('thống kê ghép nhóm: trung bình, phương sai, phân vị và mốt xấp xỉ', () => {
+  const app = calculator();
+  app.stat.type = 'GROUP';
+  app.resetStatData();
+  assert.deepEqual(Array.from(app.statKeys()), ['lo', 'hi', 'f']);
+  app.osState = 'STAT_INPUT';
+  press(app, '0', 'EQUALS', '1', '0', 'EQUALS', '2', 'EQUALS');
+  press(app, '1', '0', 'EQUALS', '2', '0', 'EQUALS', '4', 'EQUALS');
+  press(app, '2', '0', 'EQUALS', '3', '0', 'EQUALS', '2', 'EQUALS');
+  app.showStatResult();
+  assert.equal(app.osState, 'STAT_RESULT');
+  const result = app.engine.calcGroupedStat(app.stat.rows);
+  assert.equal(result.n, 8);
+  approx(result.mean, 15);
+  approx(result.sigma, Math.sqrt(50));
+  approx(result.median, 15);
+  approx(result.q1, 10);
+  approx(result.q3, 20);
+  approx(result.mode, 15);
+  assert.match(app.stat.resLines.join(' '), /x̄ ≈ 15/);
+});
+
+test('thống kê ghép nhóm từ chối thiếu cận, chồng lớp và tần số không hợp lệ', () => {
+  const engine = new MathEngine();
+  for (const data of [
+    [{lo: 0, hi: null, f: 2}],
+    [{lo: 5, hi: 5, f: 2}],
+    [{lo: 0, hi: 10, f: 2}, {lo: 9, hi: 20, f: 3}],
+    [{lo: 0, hi: 10, f: 1.5}]
+  ]) assert.equal(engine.calcGroupedStat(data).err, 'Math ERROR');
 });
 
 test('OPTN thông thường có mục Hyperbolic, đơn vị góc, ký hiệu kỹ thuật', () => {

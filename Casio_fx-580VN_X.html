@@ -1492,8 +1492,8 @@
       color: #222;
       box-shadow: 0 1px 2px rgba(0,0,0,0.1);
     }
-    .key-badge.key-SHIFT { background: #ffe0b2; border-color: #ffb74d; color: #e65100; }
-    .key-badge.key-ALPHA { background: #ffcdd2; border-color: #ef9a9a; color: #c62828; }
+    .key-badge.key-SHIFT { background: #F1E5C9; border-color: #CBB984; color: #594923; }
+    .key-badge.key-ALPHA { background: #DDEAF0; border-color: #9BBBC8; color: #2B5266; }
     .key-badge.key-OPTN, .key-badge.key-CALC, .key-badge.key-MENU { background: #e0e0e0; border-color: #9e9e9e; }
     .key-badge.key-DEL, .key-badge.key-AC { background: #bbdefb; border-color: #64b5f6; color: #0d47a1; }
     .key-badge.key-EQUALS { background: #dcedc8; border-color: #aed581; color: #33691e; }
@@ -1627,9 +1627,11 @@
       padding: max(10px, env(safe-area-inset-top, 0px)) 12px 12px;
       font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #18181B;
     }
-    .fx-appbar { display: flex; flex-direction: column; justify-content: center; height: 40px; line-height: 1.25; }
-    .fx-title { font-size: 15px; font-weight: 600; letter-spacing: -.2px; }
-    .fx-sub { font-size: 12px; color: #52525B; }
+    .fx-appbar { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 80px; padding: 8px 4px 10px; box-sizing: border-box; text-align: center; line-height: 1.15; }
+    .fx-owner { display: flex; flex-direction: column; align-items: center; gap: 2px; width: 100%; color: #2B5266; }
+    .fx-owner-name { font-size: clamp(18px, 5vw, 23px); font-weight: 700; letter-spacing: .035em; white-space: nowrap; }
+    .fx-owner-phone { font-family: 'Geist Mono', ui-monospace, monospace; font-size: clamp(14px, 3.8vw, 17px); font-weight: 600; letter-spacing: .04em; white-space: nowrap; }
+    .fx-title { font-size: 11px; font-weight: 500; letter-spacing: .12em; color: #71717A; }
 
     .fx-display {
       --lcd-bg: #FFFFFF; background: #FFFFFF; border-radius: 20px; padding: 10px 12px; box-sizing: border-box;
@@ -1665,27 +1667,29 @@
     .fx-xi { font-style: italic; }
     .fx-sa { position: absolute; top: 5px; font-size: 9.5px; font-weight: 600; line-height: 1; white-space: nowrap; display: inline-flex; align-items: flex-start; letter-spacing: .1px; pointer-events: none; }
     .fx-sa i { font-style: normal; font-size: 7px; margin-top: -2px; margin-left: .5px; }
-    .fx-s { left: 6px; color: #7A4E00; }
-    .fx-a { right: 6px; color: #B34343; }
-    .calc-btn.fx-fn { background: #E4E4E7; box-shadow: 0 1px 0 rgba(24,24,27,.2), inset 0 1px 0 rgba(255,255,255,.55); }
-    .fx-fn .fx-s { color: #6B4300; }
-    .fx-fn .fx-a { color: #B34343; }
-    .calc-btn.fx-op { background: #DDEEE8; color: #0B5B49; box-shadow: 0 1px 0 rgba(11,91,73,.28), inset 0 1px 0 rgba(255,255,255,.6); }
+    /* Muted key pigments: secondary legends share their modifier's hue, without neon contrast. */
+    .calc-container { --shift-key-color: #836729; --alpha-key-color: #426C80; }
+    .fx-s { left: 6px; color: var(--shift-key-color); }
+    .fx-a { right: 6px; color: var(--alpha-key-color); }
+    .calc-btn.fx-fn { background: #EAEAE7; box-shadow: 0 1px 0 rgba(24,24,27,.14), inset 0 1px 0 rgba(255,255,255,.55); }
+    .fx-fn .fx-s { color: var(--shift-key-color); }
+    .fx-fn .fx-a { color: var(--alpha-key-color); }
+    .calc-btn.fx-op { background: #E2EAE6; color: #345B51; box-shadow: 0 1px 0 rgba(24,24,27,.14), inset 0 1px 0 rgba(255,255,255,.6); }
     .fx-op .fx-g { font-size: 21px; }
-    .calc-btn.fx-del { background: #D4D4D8; box-shadow: 0 1px 0 rgba(24,24,27,.24), inset 0 1px 0 rgba(255,255,255,.45); }
-    .calc-btn.fx-ac { background: #27272A; color: #FAFAFA; box-shadow: 0 1px 0 #09090B, inset 0 1px 0 rgba(255,255,255,.12); }
-    .fx-ac .fx-s { color: #FBBF24; }
-    .calc-btn.fx-eq { background: #0E7C66; color: #FFFFFF; box-shadow: 0 1px 0 #075A49, inset 0 1px 0 rgba(255,255,255,.22); }
+    .calc-btn.fx-del { background: #DCDDD9; box-shadow: 0 1px 0 rgba(24,24,27,.18), inset 0 1px 0 rgba(255,255,255,.45); }
+    .calc-btn.fx-ac { background: #3F4445; color: #F5F5F2; box-shadow: 0 1px 0 #303535, inset 0 1px 0 rgba(255,255,255,.12); }
+    .fx-ac .fx-s { color: #E5CB8F; }
+    .calc-btn.fx-eq { background: #376A60; color: #F7F8F5; box-shadow: 0 1px 0 #2D564E, inset 0 1px 0 rgba(255,255,255,.2); }
     .fx-eq .fx-g { font-size: 24px; }
-    .fx-eq .fx-s { color: #FDE68A; }
-    .calc-btn.fx-sy { height: calc(var(--kh) * .88); padding-top: 0; background: #E4E4E7; box-shadow: 0 1px 0 rgba(24,24,27,.2), inset 0 1px 0 rgba(255,255,255,.55); }
-    #btn-SHIFT { background: #F9D76B; color: #553800; }
-    #btn-ALPHA { background: #F3B4B4; color: #7F2929; }
+    .fx-eq .fx-s { color: #E5CB8F; }
+    .calc-btn.fx-sy { height: calc(var(--kh) * .88); padding-top: 0; background: #EAEAE7; box-shadow: 0 1px 0 rgba(24,24,27,.14), inset 0 1px 0 rgba(255,255,255,.55); }
+    #btn-SHIFT { background: #E9D49D; color: #594923; }
+    #btn-ALPHA { background: #BAD4DF; color: #2B5266; }
     .fx-sy .fx-g { font-size: 12.5px; font-weight: 600; letter-spacing: .3px; height: auto; }
     .fx-sy .fx-sa { top: 3px; }
     .calc-btn.fx-sy.fx-has-s { padding-top: 6px; }
-    .calc-btn.fx-on-s { background: #7A4E00; color: #FFFFFF; }
-    .calc-btn.fx-on-a { background: #A3221A; color: #FFFFFF; }
+    .calc-btn.fx-on-s { background: #A58B52; color: #262117; }
+    .calc-btn.fx-on-a { background: #789FB0; color: #182F3A; }
 
     .fx-dpad {
       position: relative; width: var(--dp); height: var(--dp); border-radius: 50%; background: #E4E4E7; justify-self: center;
@@ -1703,7 +1707,7 @@
     .fx-ar svg { width: 22px; height: 22px; }
 
     .fx-tight .fx-sa { font-size: 8.5px; letter-spacing: 0; }
-    @media (max-height: 700px) { .fx-appbar { display: none; } }
+    @media (max-height: 700px) { .fx-appbar { min-height: 64px; padding: 4px 4px 6px; } .fx-title { display: none; } }
     @media (min-width: 700px) { .emulator-workspace { padding-top: 16px; } .calc-container { max-width: 460px !important; } }
 
   </style>
@@ -1812,7 +1816,7 @@
     <main class="emulator-workspace" id="emulator-workspace">
       <div class="calc-container">
 <div class="calculator-outer fx-shell">
-<div class="fx-appbar"><span class="fx-title">fx-580VN X</span><span class="fx-sub">ClassWiz · Máy tính khoa học</span></div>
+<div class="fx-appbar"><div class="fx-owner" aria-label="TOÁN ANH KIÊN - 0987.473.509"><span class="fx-owner-name">TOÁN ANH KIÊN</span><span class="fx-owner-phone">0987.473.509</span></div><span class="fx-title">fx-580VN X</span></div>
 <div class="fx-display">
 <!-- Active LCD Screen -->
       <div class="lcd-screen-overlay" id="lcd-screen">
@@ -2897,6 +2901,42 @@ class MathEngine {
       q3: q3,
       max: max
     };
+  }
+
+  // Grouped classes [lo, hi) with frequency. Mean and dispersion use class midpoints;
+  // quantiles and mode use interpolation, so all reported estimates are approximate.
+  calcGroupedStat(data) {
+    const rows = data.filter(r => r.lo !== null || r.hi !== null || r.f !== null);
+    if (!rows.length || rows.some(r => typeof r.lo !== 'number' || typeof r.hi !== 'number'
+        || !Number.isFinite(r.lo) || !Number.isFinite(r.hi)
+        || !Number.isInteger(r.f) || r.f < 0 || r.hi <= r.lo)) return { err: 'Math ERROR' };
+    const classes = [...rows].sort((a, b) => a.lo - b.lo);
+    if (classes.some((r, i) => i && r.lo < classes[i - 1].hi)) return { err: 'Math ERROR' };
+    const n = classes.reduce((s, r) => s + r.f, 0);
+    if (!n) return { err: 'Math ERROR' };
+    const midpoint = r => (r.lo + r.hi) / 2;
+    const sumFX = classes.reduce((s, r) => s + midpoint(r) * r.f, 0);
+    const mean = sumFX / n;
+    const squared = classes.reduce((s, r) => s + r.f * (midpoint(r) - mean) ** 2, 0);
+    const quantile = fraction => {
+      const target = n * fraction;
+      let before = 0;
+      for (const r of classes) {
+        if (r.f && before + r.f >= target) return r.lo + (target - before) / r.f * (r.hi - r.lo);
+        before += r.f;
+      }
+      return classes[classes.length - 1].hi;
+    };
+    // Modal class by frequency density so unequal class widths remain comparable.
+    const densities = classes.map(r => r.f / (r.hi - r.lo));
+    const modal = densities.indexOf(Math.max(...densities));
+    const r = classes[modal];
+    const d1 = densities[modal] - (densities[modal - 1] || 0);
+    const d2 = densities[modal] - (densities[modal + 1] || 0);
+    const mode = d1 + d2 > 0 ? r.lo + d1 / (d1 + d2) * (r.hi - r.lo) : midpoint(r);
+    return { n, sumFX, mean, sigma: Math.sqrt(squared / n),
+      sampleSD: n > 1 ? Math.sqrt(squared / (n - 1)) : NaN,
+      q1: quantile(.25), median: quantile(.5), q3: quantile(.75), mode };
   }
 
   // Statistics with optional frequency: data = [{x, y, f}], type = VAR | LIN | QUAD | LN | EXP | AB | POW | INV
@@ -4944,21 +4984,11 @@ class CasioApp {
 
     // Navigation
     if (key === 'RIGHT') {
-      if (this.menuPage === 1) {
-        if (this.menuSelected < 8) this.menuSelected++;
-        else this.menuSelected = 1;
-      } else {
-        if (this.menuSelected < 12) this.menuSelected++;
-        else this.menuSelected = 9;
-      }
+      this.menuSelected = this.menuSelected < 12 ? this.menuSelected + 1 : 1;
+      this.menuPage = this.menuSelected > 8 ? 2 : 1;
     } else if (key === 'LEFT') {
-      if (this.menuPage === 1) {
-        if (this.menuSelected > 1) this.menuSelected--;
-        else this.menuSelected = 8;
-      } else {
-        if (this.menuSelected > 9) this.menuSelected--;
-        else this.menuSelected = 12;
-      }
+      this.menuSelected = this.menuSelected > 1 ? this.menuSelected - 1 : 12;
+      this.menuPage = this.menuSelected > 8 ? 2 : 1;
     } else if (key === 'DOWN') {
       if (this.menuPage === 1) {
         if (this.menuSelected <= 4) this.menuSelected += 4;
@@ -7008,12 +7038,14 @@ class CasioApp {
       { id: 'EXP', label: 'e^X', two: true },
       { id: 'AB', label: 'A·B^X', two: true },
       { id: 'POW', label: 'A·X^B', two: true },
-      { id: 'INV', label: '1/X', two: true }
+      { id: 'INV', label: '1/X', two: true },
+      { id: 'GROUP', label: 'Ghép nhóm', two: false }
     ];
   }
 
   statKeys() {
     const two = this.statTypes().find(t => t.id === this.stat.type).two;
+    if (this.stat.type === 'GROUP') return ['lo', 'hi', 'f'];
     const keys = ['x'];
     if (two) keys.push('y');
     if (this.statFreq) keys.push('f');
@@ -7021,7 +7053,7 @@ class CasioApp {
   }
 
   statMaxRows() {
-    return this.statFreq ? 40 : 80;
+    return this.stat.type === 'GROUP' || this.statFreq ? 40 : 80;
   }
 
   startStat() {
@@ -7031,7 +7063,8 @@ class CasioApp {
   }
 
   resetStatData() {
-    this.stat.rows = [{ x: null, y: null, f: null }];
+    this.stat.rows = [this.stat.type === 'GROUP'
+      ? { lo: null, hi: null, f: null } : { x: null, y: null, f: null }];
     this.stat.r = 0;
     this.stat.c = 0;
     this.stat.buffer = '';
@@ -7040,7 +7073,7 @@ class CasioApp {
   }
 
   renderStatType() {
-    const items = this.statTypes().map((t, i) => `${i + 1}:${t.label}`);
+    const items = this.statTypes().map((t, i) => `${i + 1}:${t.id === 'GROUP' && this.display.language !== 'VI' ? 'Grouped Data' : t.label}`);
     const first = this.stat.typeScroll;
     this.display.renderList(this.display.language === 'VI' ? 'Thống kê (Stat)' : 'Statistics',
       items.slice(first, first + 4), first > 0, first + 4 < items.length);
@@ -7141,7 +7174,8 @@ class CasioApp {
         st.rows.splice(st.r, 1);
         if (st.r >= st.rows.length) st.r = st.rows.length - 1;
       } else {
-        st.rows[0] = { x: null, y: null, f: null };
+        st.rows[0] = st.type === 'GROUP'
+          ? { lo: null, hi: null, f: null } : { x: null, y: null, f: null };
       }
     } else if (key === 'AC') {
       if (st.buffer) st.buffer = '';
@@ -7166,20 +7200,28 @@ class CasioApp {
     const keys = this.statKeys();
     const k = keys[st.c];
     if (st.buffer !== '') {
-      const val = parseFloat(st.buffer);
-      if (isNaN(val) || (k === 'f' && (!Number.isInteger(val) || val < 0 || val > 999))) {
+      const val = Number(st.buffer);
+      if (!Number.isFinite(val) || (k === 'f' && (!Number.isInteger(val) || val < 0 || val > 999))
+          || (st.type === 'GROUP' && k === 'hi' && st.rows[st.r].lo !== null && val <= st.rows[st.r].lo)
+          || (st.type === 'GROUP' && k === 'f' && (st.rows[st.r].lo === null || st.rows[st.r].hi === null))) {
         st.msg = 'Math ERROR';
         st.buffer = '';
         return;
       }
       st.rows[st.r][k] = val;
-      if (this.statFreq && st.rows[st.r].f === null) st.rows[st.r].f = 1;
+      if (this.statFreq && st.type !== 'GROUP' && st.rows[st.r].f === null) st.rows[st.r].f = 1;
       st.buffer = '';
+    }
+    if (st.type === 'GROUP') {
+      if (st.rows[st.r][k] === null) return;
+      if (st.c < keys.length - 1) { st.c++; return; }
+      st.c = 0;
     }
     if (st.r < st.rows.length - 1) {
       st.r++;
     } else if (st.rows.length < this.statMaxRows() && st.rows[st.r][k] !== null) {
-      st.rows.push({ x: null, y: null, f: null });
+      st.rows.push(st.type === 'GROUP'
+        ? { lo: null, hi: null, f: null } : { x: null, y: null, f: null });
       st.r++;
     }
   }
@@ -7188,7 +7230,8 @@ class CasioApp {
     const st = this.stat;
     const keys = this.statKeys();
     const fmt = v => (v === null ? '' : String(Number(v.toPrecision(10))));
-    const names = { x: 'x', y: 'y', f: 'FREQ' };
+    const names = { x: 'x', y: 'y', lo: 'Dưới', hi: 'Trên', f: 'FREQ' };
+    if (this.display.language !== 'VI') { names.lo = 'Lower'; names.hi = 'Upper'; }
     const first = Math.max(0, Math.min(st.r - 1, st.rows.length - 3));
     let rows = '';
     for (let i = first; i < Math.min(st.rows.length, first + 3); i++) {
@@ -7221,7 +7264,26 @@ class CasioApp {
   showStatResult() {
     const st = this.stat;
     const type = this.statTypes().find(t => t.id === st.type);
-    const keys = this.statKeys();
+    if (st.type === 'GROUP') {
+      const res = this.engine.calcGroupedStat(st.rows);
+      if (res.err) {
+        st.msg = res.err;
+        this.osState = 'STAT_INPUT';
+        this.renderStatInput();
+        return;
+      }
+      const fmt = v => Number.isFinite(v) ? String(Number(v.toPrecision(10))) : 'Math ERROR';
+      st.resLines = [
+        `n = ${fmt(res.n)}`, `x̄ ≈ ${fmt(res.mean)}`, `Σfx ≈ ${fmt(res.sumFX)}`,
+        `σx ≈ ${fmt(res.sigma)}`, `sx ≈ ${fmt(res.sampleSD)}`,
+        `Med ≈ ${fmt(res.median)}`, `Q1 ≈ ${fmt(res.q1)}`, `Q3 ≈ ${fmt(res.q3)}`,
+        `Mo ≈ ${fmt(res.mode)}`
+      ];
+      st.resScroll = 0;
+      this.osState = 'STAT_RESULT';
+      this.renderStatResult();
+      return;
+    }
     const data = [];
     st.rows.forEach(r => {
       if (r.x === null || (type.two && r.y === null)) return;
@@ -7574,8 +7636,8 @@ class CasioApp {
   renderVectorDim() {
     const isVi = this.display.language === 'VI';
     this.display.renderList(`${this.vectorState.activeVct} ${isVi ? 'Kích thước?' : 'Dimension?'}`, [
-      isVi ? '1: 2 chiều' : '1: 2 Dimensions',
-      isVi ? '2: 3 chiều' : '2: 3 Dimensions'
+      isVi ? '2: 2 chiều' : '2: 2 Dimensions',
+      isVi ? '3: 3 chiều' : '3: 3 Dimensions'
     ], false, false);
   }
 
@@ -7907,8 +7969,9 @@ class CasioApp {
     }
     if (this.osState === 'VCT_DIM') {
       if (key === 'AC') { this.renderVectorCalc(); return; }
-      if (key === '1' || key === '2') {
-        st.vectors[st.activeVct] = Array(key === '1' ? 2 : 3).fill(0);
+      if (key === '2' || key === '3') {
+        st.dim = Number(key);
+        st.vectors[st.activeVct] = Array(st.dim).fill(0);
         st.cellIdx = 0; st.buffer = ''; this.osState = 'VCT_INPUT'; this.renderVectorInput();
       }
       return;
