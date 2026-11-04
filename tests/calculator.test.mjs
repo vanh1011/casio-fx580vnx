@@ -28,6 +28,9 @@ function calculator() {
   app.cursorPos = 0;
   app.justCalculated = false;
   app.rawResult = 0;
+  app.history = [];
+  app.historyIndex = -1;
+  app.displayResult = '0';
   app.vectorState = { activeVct: 'VctA', dim: 3,
     vectors: { VctA: null, VctB: null, VctC: null, VctD: null }, vctAns: null,
     expression: '', optionPage: 0, optionFrom: 'VCT_CALC', selectAction: 'define', cellIdx: 0, buffer: '' };
@@ -37,9 +40,9 @@ function calculator() {
   app.menuPage = 1;
   app.menuSelected = 1;
   app.display = {
-    language: 'VI', showView() {}, renderExpression() {}, setResult(result) { this.result = result; },
-    updateIndicators() {}, renderList(title, items) { this.title = title; this.items = items; },
-    renderCustom(markup) { this.markup = markup; }, setScrollArrows() {},
+    language: 'VI', showView() {}, renderExpression() {}, setMode() {}, setResult(result) { this.result = result; },
+    updateIndicators(state) { this.stoVisible = state.sto; }, renderList(title, items) { this.title = title; this.items = items; },
+    renderCustom(markup) { this.markup = markup; }, setScrollArrows() {}, updateScrollArrows() {},
     renderMenu(selected, page) { this.selected = selected; this.page = page; }
   };
   return app;
@@ -106,6 +109,45 @@ test('STO lưu biểu thức và kết quả vào A, x, z, M', () => {
   app.justCalculated = true;
   press(app, 'STO', 'sin');
   assert.equal(app.engine.variables.D, 42);
+});
+
+test('STO bật chữ báo chờ chọn biến và tắt khi hủy hoặc đã lưu', () => {
+  const app = calculator();
+  app.expression = '12';
+  press(app, 'STO');
+  assert.equal(app.display.stoVisible, true);
+  press(app, 'STO');
+  assert.equal(app.display.stoVisible, false);
+  press(app, 'STO', 'neg');
+  assert.equal(app.display.stoVisible, false);
+  assert.equal(app.engine.variables.A, 12);
+});
+
+test('ENG đổi 0.003 sang 3×10⁻³ và về dạng thập phân, không đổi giá trị lưu', () => {
+  const app = calculator();
+  app.expression = '3/1000';
+  app.cursorPos = app.expression.length;
+  press(app, 'EQUALS', 'ENG');
+  assert.equal(app.display.result, '3×10^(-3)');
+  approx(app.rawResult, 0.003);
+  press(app, 'ENG');
+  assert.equal(app.display.result, '0.003');
+  press(app, 'ENG', 'STO', 'neg');
+  assert.equal(app.display.result, '0.003 → A');
+  approx(app.engine.variables.A, 0.003);
+});
+
+test('ENG không dùng kết quả cũ trước khi bấm bằng và đặt lại khi tính phép mới', () => {
+  const app = calculator();
+  app.rawResult = 0.003;
+  app.expression = '2';
+  press(app, 'ENG');
+  assert.equal(app.display.result, undefined);
+  press(app, 'EQUALS', 'ENG');
+  assert.equal(app.display.result, '2');
+  app.expression = '3/1000';
+  press(app, 'EQUALS', 'ENG');
+  assert.equal(app.display.result, '3×10^(-3)');
 });
 
 test('STO không lưu nếu biểu thức không hợp lệ', () => {
