@@ -862,11 +862,16 @@
       margin-bottom: 2px;
     }
     .list-items-container {
+      position: relative;
       flex: 1;
       display: flex;
       flex-direction: column;
       justify-content: space-around;
       padding: 1px 0;
+    }
+    .list-edge-arrows {
+      position: absolute; right: 0; bottom: 0;
+      font-size: calc(9px * var(--lcd-scale, 1)); line-height: 1; color: var(--lcd-dark);
     }
     .list-item-row {
       font-size: calc(12.5px * var(--lcd-scale, 1));
@@ -4079,16 +4084,20 @@ class CasioDisplay {
   }
 
   // View: AUTHENTIC LIST MENU (SETUP, OPTN, CONST)
-  renderList(title, items, hasUp, hasDown) {
+  renderList(title, items, hasUp, hasDown, noTitle = false) {
     this.showView('LIST');
     const titleEl = document.getElementById('list-title-text');
     const arrowEl = document.getElementById('list-arrows-indicator');
     const containerEl = document.getElementById('list-items-container');
+    const barEl = document.querySelector('#classwiz-list-overlay .list-title-bar');
 
+    if (barEl) barEl.style.display = noTitle ? 'none' : '';
     if (titleEl) titleEl.textContent = title;
-    if (arrowEl) arrowEl.textContent = `${hasUp ? '▲' : ''}${hasDown ? '▼' : ''}`;
+    const arrows = `${hasUp ? '▲' : ''}${hasDown ? '▼' : ''}`;
+    if (arrowEl) arrowEl.textContent = arrows;
     if (containerEl) {
-      containerEl.innerHTML = items.map(it => `<div class="list-item-row">${this.formatToNaturalHtml(it)}</div>`).join('');
+      containerEl.innerHTML = items.map(it => `<div class="list-item-row">${this.formatToNaturalHtml(it)}</div>`).join('')
+        + (noTitle && arrows ? `<span class="list-edge-arrows">${arrows}</span>` : '');
     }
   }
 
@@ -7778,13 +7787,16 @@ class CasioApp {
   }
 
   renderVectorOptn() {
-    const pages = [
-      ['1:Define Vector', '2:Edit Vector', '3:VctA', '4:VctB'],
-      ['1:VctC', '2:VctD', '3:VctAns', '4:Dot Product'],
-      ['1:Angle(', '2:UnitV(']
+    const isVi = this.display.language === 'VI';
+    const pages = isVi ? [
+      ['1:Tạo vecto', '2:Sửa vecto', '3:VctA        4:VctB', '5:VctC        6:VctD'],
+      ['1:VctAns', '2:Tích vô hướng', '3:Góc giữa 2vecto', '4:Vecto đơn vị']
+    ] : [
+      ['1:Define Vector', '2:Edit Vector', '3:VctA        4:VctB', '5:VctC        6:VctD'],
+      ['1:VctAns', '2:Dot Product', '3:Angle', '4:UnitV']
     ];
     const page = this.vectorState.optionPage;
-    this.display.renderList('Vector OPTN', pages[page], page > 0, page < 2);
+    this.display.renderList('', pages[page], page > 0, page < pages.length - 1, true);
   }
 
   renderVectorCalc() {
@@ -7923,16 +7935,15 @@ class CasioApp {
       return;
     }
     if (this.osState === 'VCT_OPTN') {
-      if (key === 'UP' || key === 'DOWN') { st.optionPage = Math.max(0, Math.min(2, st.optionPage + (key === 'DOWN' ? 1 : -1))); this.renderVectorOptn(); return; }
+      if (key === 'UP' || key === 'DOWN') { st.optionPage = Math.max(0, Math.min(1, st.optionPage + (key === 'DOWN' ? 1 : -1))); this.renderVectorOptn(); return; }
       if (key === 'AC') { if (st.optionFrom === 'VCT_INPUT') { this.osState = 'VCT_INPUT'; this.renderVectorInput(); } else this.renderVectorCalc(); return; }
-      if (!'1234'.includes(key) || key.length !== 1) return;
+      if (!'123456'.includes(key) || key.length !== 1) return;
       if (st.optionPage === 0 && (key === '1' || key === '2')) {
         st.selectAction = key === '1' ? 'define' : 'edit'; this.osState = 'VCT_SELECT'; this.renderVectorSelect(); return;
       }
       const insert = [
-        {3:'VctA',4:'VctB'},
-        {1:'VctC',2:'VctD',3:'VctAns',4:'•'},
-        {1:'Angle(',2:'UnitV('}
+        {3:'VctA',4:'VctB',5:'VctC',6:'VctD'},
+        {1:'VctAns',2:'•',3:'Angle(',4:'UnitV('}
       ][st.optionPage][key];
       if (insert) { st.expression += insert; this.renderVectorCalc(); }
       return;
