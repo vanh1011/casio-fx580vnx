@@ -1641,10 +1641,8 @@
       padding: max(10px, env(safe-area-inset-top, 0px)) 12px 12px;
       font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #18181B;
     }
-    .fx-appbar { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 80px; padding: 8px 4px 10px; box-sizing: border-box; text-align: center; line-height: 1.15; }
-    .fx-owner { display: flex; flex-direction: column; align-items: center; gap: 2px; width: 100%; color: #2B5266; }
-    .fx-owner-name { font-size: clamp(18px, 5vw, 23px); font-weight: 700; letter-spacing: .035em; white-space: nowrap; }
-    .fx-owner-phone { font-family: 'Geist Mono', ui-monospace, monospace; font-size: clamp(14px, 3.8vw, 17px); font-weight: 600; letter-spacing: .04em; white-space: nowrap; }
+    .fx-appbar { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 55px; padding: 6px 4px 8px; box-sizing: border-box; text-align: center; line-height: 1.15; }
+    .fx-owner { display: flex; align-items: center; justify-content: center; gap: clamp(6px, 2vw, 10px); max-width: 100%; color: #2B5266; font-size: clamp(11px, 3.8vw, 17px); font-weight: 600; letter-spacing: .01em; white-space: nowrap; }
     .fx-title { font-size: 11px; font-weight: 500; letter-spacing: .12em; color: #71717A; }
 
     .fx-display {
@@ -1721,7 +1719,7 @@
     .fx-ar svg { width: 22px; height: 22px; }
 
     .fx-tight .fx-sa { font-size: 8.5px; letter-spacing: 0; }
-    @media (max-height: 700px) { .fx-appbar { min-height: 64px; padding: 4px 4px 6px; } .fx-title { display: none; } }
+    @media (max-height: 700px) { .fx-appbar { min-height: 48px; padding: 4px 4px 6px; } }
     @media (min-width: 700px) { .emulator-workspace { padding-top: 16px; } .calc-container { max-width: 460px !important; } }
 
   </style>
@@ -1830,7 +1828,7 @@
     <main class="emulator-workspace" id="emulator-workspace">
       <div class="calc-container">
 <div class="calculator-outer fx-shell">
-<div class="fx-appbar"><div class="fx-owner" aria-label="TOÁN ANH KIÊN - 0987.473.509"><span class="fx-owner-name">TOÁN ANH KIÊN</span><span class="fx-owner-phone">0987.473.509</span></div><span class="fx-title">fx-580VN X</span></div>
+<div class="fx-appbar"><div class="fx-owner"><span>TOÁN ANH KIÊN</span><span aria-hidden="true">-</span><span>0987.473.509</span></div><span class="fx-title">Casio</span></div>
 <div class="fx-display">
 <!-- Active LCD Screen -->
       <div class="lcd-screen-overlay" id="lcd-screen">
