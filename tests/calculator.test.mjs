@@ -42,7 +42,7 @@ function calculator() {
   app.display = {
     language: 'VI', showView() {}, renderExpression() {}, setMode() {}, setResult(result) { this.result = result; },
     updateIndicators(state) { this.stoVisible = state.sto; }, renderList(title, items) { this.title = title; this.items = items; },
-    renderCustom(markup) { this.markup = markup; }, setScrollArrows() {}, updateScrollArrows() {},
+    renderCustom(markup) { this.markup = markup; }, formatToNaturalHtml(text) { return text; }, setScrollArrows() {}, updateScrollArrows() {},
     renderMenu(selected, page) { this.selected = selected; this.page = page; }
   };
   return app;
@@ -93,6 +93,78 @@ test('SOLVE chấp nhận dấu bằng trống bên phải', () => {
     assert.ok(answer && Number.isFinite(answer.x), `${expr}: không tìm được nghiệm`);
     approx(Math.abs(answer.x), 2, 1e-4);
   }
+});
+
+test('CALC tính biểu thức có biến qua màn nhập giá trị x', () => {
+  const app = calculator();
+  app.expression = '2x+1';
+  app.cursorPos = app.expression.length;
+  press(app, 'CALC');
+  assert.equal(app.osState, 'CALC_PROMPT');
+  press(app, '3', 'EQUALS');
+  approx(app.rawResult, 7);
+  assert.equal(app.engine.variables.x, 3);
+});
+
+test('CALC hỏi từng biến, giữ nguyên biểu thức để tính lại', () => {
+  const app = calculator();
+  app.expression = 'A+x+M';
+  app.cursorPos = app.expression.length;
+  press(app, 'CALC');
+  assert.match(app.display.markup, /A =/);
+  press(app, '2', 'EQUALS');
+  assert.match(app.display.markup, /x =/);
+  press(app, '3', 'EQUALS');
+  assert.match(app.display.markup, /M =/);
+  press(app, '4', 'EQUALS');
+  approx(app.rawResult, 9);
+  assert.equal(app.expression, 'A+x+M');
+});
+
+test('Rad: sin nghịch đảo 1/2 hiện pi/6 và vẫn lưu giá trị rad', () => {
+  const app = calculator();
+  app.engine.setAngleMode('RAD');
+  app.state.angleMode = 'RAD';
+  press(app, 'SHIFT', 'sin', '0', '.', '5', 'EQUALS');
+  assert.equal(app.displayResult, 'π/6');
+  approx(app.rawResult, Math.PI / 6);
+});
+
+test('SOLVE tìm điểm đạo hàm x²−4x bằng 0', () => {
+  const app = calculator();
+  app.expression = '\\diff{x^2-4x}{x}=0';
+  app.cursorPos = app.expression.length;
+  press(app, 'SHIFT', 'CALC');
+  assert.equal(app.osState, 'SOLVE_PROMPT');
+  press(app, 'EQUALS');
+  assert.equal(app.osState, 'SOLVE_RESULT');
+  approx(app.solveState.sol.x, 2, 1e-3);
+});
+
+test('ln( e ) và ln(2) bằng log tự nhiên, không trả Math ERROR', () => {
+  const app = calculator();
+  press(app, 'ln', '2', 'EQUALS');
+  approx(app.rawResult, Math.log(2));
+  const engine = new MathEngine();
+  approx(engine.evaluate('ln(e)'), 1);
+});
+
+test('Σ điều hướng từ biểu thức tới cận trên, dưới, không gọi lịch sử', () => {
+  const app = calculator();
+  app.history = [{expr: '1+1', res: '2'}];
+  app.historyIndex = 1;
+  app.insertSum();
+  const sum = () => app.parseTemplates(app.expression).find(t => t.type === 'sum');
+  press(app, 'UP');
+  assert.equal(app.cursorPos, sum().upper.start);
+  press(app, 'UP');
+  assert.equal(app.cursorPos, sum().upper.start);
+  assert.equal(app.historyIndex, 1);
+  press(app, 'DOWN');
+  assert.equal(app.cursorPos, sum().lower.start);
+  press(app, 'DOWN');
+  assert.equal(app.cursorPos, sum().lower.start);
+  assert.equal(app.historyIndex, 1);
 });
 
 test('STO lưu biểu thức và kết quả vào A, x, z, M', () => {

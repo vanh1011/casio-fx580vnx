@@ -2438,7 +2438,7 @@ class MathEngine {
       sanitized = sanitized.replace(/÷/g, '/');
       sanitized = sanitized.replace(/[−–—]/g, '-');
       sanitized = sanitized.replace(/π/g, 'Math.PI');
-      sanitized = sanitized.replace(/e(?![a-zA-Z0-9_])/g, 'Math.E');
+      sanitized = sanitized.replace(/\be\b/g, 'Math.E');
 
       // Random generator functions
       sanitized = sanitized.replace(/Ran#/g, 'Ran()');
@@ -2519,10 +2519,12 @@ class MathEngine {
       // PreAns replacement
       sanitized = sanitized.replace(/\bPreAns\b/g, `(${this.variables.PreAns || 0})`);
 
+      // Insert multiplication before substituting x (e.g. 2x -> 2*(3)).
+      sanitized = sanitized.replace(/(\d|\))\s*x\b/g, '$1*x');
       // Variable replacement
       for (const [v, val] of Object.entries(this.variables)) {
         if (v === 'PreAns') continue;
-        const regex = new RegExp(`\\b${v}\\b`, 'g');
+        const regex = new RegExp(`(?<![.\\w])${v}(?!\\w)`, 'g');
         sanitized = sanitized.replace(regex, `(${val})`);
       }
 
@@ -2564,8 +2566,8 @@ class MathEngine {
       sanitized = sanitized.replace(/sin\(/g, 'MATH_SIN(');
       sanitized = sanitized.replace(/cos\(/g, 'MATH_COS(');
       sanitized = sanitized.replace(/tan\(/g, 'MATH_TAN(');
-      sanitized = sanitized.replace(/ln\(/g, 'Math.log(');
-      sanitized = sanitized.replace(/log\(/g, 'Math.log10(');
+      sanitized = sanitized.replace(/\blog\(/g, 'Math.log10(');
+      sanitized = sanitized.replace(/\bln\(/g, 'Math.log(');
       sanitized = sanitized.replace(/√\(/g, 'Math.sqrt(');
       sanitized = sanitized.replace(/√([0-9.]+)/g, 'Math.sqrt($1)');
       sanitized = sanitized.replace(/∛\(/g, 'Math.cbrt(');
@@ -2718,15 +2720,14 @@ class MathEngine {
     const origX = this.variables.x;
     this.variables.x = xVal;
     let sub = exprStr;
-    // Handle coefficient before x: e.g. 2x, 3.5x, )x
-    sub = sub.replace(/([0-9.]+|\))\s*(?<![a-zA-Z\\])x(?![a-zA-Z0-9])/gi, '$1*(x)');
-    // Handle x before number or paren: e.g. x(2), x2
-    sub = sub.replace(/(?<![a-zA-Z\\])x(?![a-zA-Z0-9])\s*([0-9.]+|\()/gi, '(x)*$1');
-    // Replace standalone x with (xVal)
-    sub = sub.replace(/(?<![a-zA-Z\\])x(?![a-zA-Z0-9])/gi, `(${xVal})`);
-    const res = this.evaluate(sub);
-    this.variables.x = origX;
-    return typeof res === 'number' && Number.isFinite(res) ? res : NaN;
+    // Keep x symbolic in derivative bodies; evaluate() substitutes the current x
+    // only after resolving the derivative template at the requested point.
+    try {
+      const res = this.evaluate(sub);
+      return typeof res === 'number' && Number.isFinite(res) ? res : NaN;
+    } finally {
+      this.variables.x = origX;
+    }
   }
 
   solveEquation(rawEqn, guess = 0) {
@@ -4753,6 +4754,11 @@ class CasioApp {
       return;
     }
 
+    if (this.osState.startsWith('CALC_')) {
+      this.handleCalcKey(key);
+      return;
+    }
+
     if (this.osState.startsWith('SOLVE_')) {
       this.handleSolveKey(key);
       return;
@@ -4955,7 +4961,7 @@ class CasioApp {
       case 'close_paren': this.insert(')'); break;
       case 'MENU': this.openMenu(); break;
       case 'optn': this.openOptionMenu(); break;
-      case 'CALC': this.calculate(); break;
+      case 'CALC': this.startCalc(); break;
 
       case 'add': this.insert('+'); break;
       case 'sub': this.insert('−'); break;
@@ -8815,6 +8821,21 @@ class CasioApp {
       }
       return;
     }
+    const sum = this.parseTemplates(this.expression)
+      .filter(t => t.type === 'sum' && this.cursorPos >= t.fullStart && this.cursorPos <= t.fullEnd)
+      .pop();
+    if (sum) {
+      const activeSum = this.findActiveSlot(this.expression, this.cursorPos);
+      const part = activeSum && activeSum.template === sum ? activeSum.part : 'expr';
+      const target = part === 'expr' ? (dir < 0 ? sum.upper : sum.lower)
+        : part === 'lower' && dir < 0 ? sum.upper
+        : part === 'upper' && dir > 0 ? sum.lower : null;
+      if (target) {
+        this.cursorPos = target.start;
+        this.display.renderExpression(this.expression, this.cursorPos);
+      }
+      return;
+    }
     const vSlots = this.getVerticalSlotsForCursor(this.expression, this.cursorPos);
     if (vSlots && vSlots.length > 1) {
       let curIdx = -1;
@@ -9272,6 +9293,49 @@ class CasioApp {
   // -------------------------------------------------------------
   // SHIFT + CALC (SOLVE) - AUTHENTIC CLASSWIZ 100% ON-SCREEN LCD
   // -------------------------------------------------------------
+  // CALC prompts for every variable in the expression, retaining its formula.
+  startCalc() {
+    if (!this.expression.trim()) return;
+    const vars = [...this.expression.matchAll(/(?<![a-zA-Z\\])(?:[A-F]|x|y|M)(?![a-zA-Z0-9])/g)]
+      .map(match => match[0]);
+    const names = [...new Set(vars)];
+    if (!names.length) { this.calculate(); return; }
+    this.osState = 'CALC_PROMPT';
+    this.calcState = { names, index: 0, buffer: '' };
+    this.renderCalcPrompt();
+  }
+
+  renderCalcPrompt() {
+    const name = this.calcState.names[this.calcState.index];
+    const val = this.calcState.buffer || String(this.engine.variables[name] ?? 0);
+    this.display.renderCustom(`<div style="padding:8px 6px;font-family:var(--font-lcd);color:var(--lcd-dark)">${name} = ${val}<br><small>Nhấn = để tính</small></div>`);
+  }
+
+  handleCalcKey(key) {
+    if (key === 'AC' || key === 'ON') {
+      this.osState = 'NORMAL';
+      if (key === 'ON') this.clearAll();
+      else this.renderCurrentView();
+      return;
+    }
+    if (key === 'DEL') this.calcState.buffer = this.calcState.buffer.slice(0, -1);
+    else if (/^[0-9.]$/.test(key)) this.calcState.buffer += key;
+    else if (key === 'neg' || key === 'sub') this.calcState.buffer = this.calcState.buffer.startsWith('-') ? this.calcState.buffer.slice(1) : '-' + this.calcState.buffer;
+    else if (key === 'EQUALS' || key === 'CALC') {
+      const name = this.calcState.names[this.calcState.index];
+      const value = Number(this.calcState.buffer || this.engine.variables[name] || 0);
+      if (!Number.isFinite(value)) { this.renderCalcPrompt(); return; }
+      this.engine.variables[name] = value;
+      this.calcState.buffer = '';
+      if (++this.calcState.index === this.calcState.names.length) {
+        this.osState = 'NORMAL';
+        this.calculate();
+        return;
+      }
+    }
+    this.renderCalcPrompt();
+  }
+
   startSolve() {
     if (!this.expression.trim()) {
       this.showSolveError('Syntax ERROR', 'Lỗi cú pháp');
@@ -9553,7 +9617,12 @@ class CasioApp {
       this.displayResult = 'Math ERROR';
       this.exactResult = 'Math ERROR';
     } else {
-      const exact = this.engine.toRadicalOrFraction(res);
+      const piRatio = this.state.angleMode === 'RAD' && /(?:sin|cos|tan)⁻¹\(/.test(this.expression)
+        ? this.engine.toFraction(res / Math.PI, 360) : null;
+      const piExact = piRatio && piRatio.d <= 360 && Math.abs(res / Math.PI - piRatio.n / piRatio.d) < 1e-10
+        ? (piRatio.n === 0 ? '0' : `${piRatio.n < 0 ? '-' : ''}${Math.abs(piRatio.n) === 1 ? '' : Math.abs(piRatio.n)}π${piRatio.d === 1 ? '' : '/' + piRatio.d}`)
+        : null;
+      const exact = piExact || this.engine.toRadicalOrFraction(res);
       if (exact) {
         this.exactResult = exact;
         this.displayResult = exact;
