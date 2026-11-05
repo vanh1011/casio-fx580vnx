@@ -1641,9 +1641,8 @@
       padding: max(10px, env(safe-area-inset-top, 0px)) 12px 12px;
       font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #18181B;
     }
-    .fx-appbar { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 55px; padding: 6px 4px 8px; box-sizing: border-box; text-align: center; line-height: 1.15; }
+    .fx-appbar { display: flex; align-items: center; justify-content: center; min-height: 42px; padding: 5px 4px 7px; box-sizing: border-box; text-align: center; line-height: 1.15; }
     .fx-owner { display: flex; align-items: center; justify-content: center; gap: clamp(6px, 2vw, 10px); max-width: 100%; color: #2B5266; font-size: clamp(11px, 3.8vw, 17px); font-weight: 600; letter-spacing: .01em; white-space: nowrap; }
-    .fx-title { font-size: 11px; font-weight: 500; letter-spacing: .12em; color: #71717A; }
 
     .fx-display {
       --lcd-bg: #FFFFFF; background: #FFFFFF; border-radius: 20px; padding: 10px 12px; box-sizing: border-box;
@@ -1719,7 +1718,7 @@
     .fx-ar svg { width: 22px; height: 22px; }
 
     .fx-tight .fx-sa { font-size: 8.5px; letter-spacing: 0; }
-    @media (max-height: 700px) { .fx-appbar { min-height: 48px; padding: 4px 4px 6px; } }
+    @media (max-height: 700px) { .fx-appbar { min-height: 38px; padding: 3px 4px 5px; } }
     @media (min-width: 700px) { .emulator-workspace { padding-top: 16px; } .calc-container { max-width: 460px !important; } }
 
   </style>
@@ -1828,7 +1827,7 @@
     <main class="emulator-workspace" id="emulator-workspace">
       <div class="calc-container">
 <div class="calculator-outer fx-shell">
-<div class="fx-appbar"><div class="fx-owner"><span>TOÁN ANH KIÊN</span><span aria-hidden="true">-</span><span>0987.473.509</span></div><span class="fx-title">Casio</span></div>
+<div class="fx-appbar"><div class="fx-owner"><span>TOÁN ANH KIÊN</span><span aria-hidden="true">-</span><span>0987.473.509</span></div></div>
 <div class="fx-display">
 <!-- Active LCD Screen -->
       <div class="lcd-screen-overlay" id="lcd-screen">
@@ -4030,6 +4029,13 @@ class CasioDisplay {
   formatResultHtml(val) {
     if (val === undefined || val === null || val === '') return '';
     const str = String(val).trim();
+
+    // π fractions use the same stacked MathI/MathO layout as numeric fractions.
+    const piFracMatch = str.match(/^(-?)\\frac\{([^{}]+)\}\{(\d+)\}$/);
+    if (piFracMatch && piFracMatch[2].includes('π')) {
+      const signHtml = piFracMatch[1] ? '<span class="casio-sign">−</span>' : '';
+      return `${signHtml}<span class="casio-frac"><span class="frac-num">${this.formatToNaturalHtml(piFracMatch[2])}</span><span class="frac-den">${piFracMatch[3]}</span></span>`;
+    }
 
     // 1. Mixed fraction: "1 2/3" or "-1 2/3"
     const mixedMatch = str.match(/^(-?)(\d+)\s+(\d+)\/(\d+)$/);
@@ -9329,6 +9335,7 @@ class CasioApp {
       this.calcState.buffer = '';
       if (++this.calcState.index === this.calcState.names.length) {
         this.osState = 'NORMAL';
+        this.display.showView('NORMAL');
         this.calculate();
         return;
       }
@@ -9617,10 +9624,14 @@ class CasioApp {
       this.displayResult = 'Math ERROR';
       this.exactResult = 'Math ERROR';
     } else {
-      const piRatio = this.state.angleMode === 'RAD' && /(?:sin|cos|tan)⁻¹\(/.test(this.expression)
+      const hasPiExpression = this.expression.includes('π') || /(?:sin|cos|tan)⁻¹\(/.test(this.expression);
+      const piRatio = hasPiExpression
         ? this.engine.toFraction(res / Math.PI, 360) : null;
       const piExact = piRatio && piRatio.d <= 360 && Math.abs(res / Math.PI - piRatio.n / piRatio.d) < 1e-10
-        ? (piRatio.n === 0 ? '0' : `${piRatio.n < 0 ? '-' : ''}${Math.abs(piRatio.n) === 1 ? '' : Math.abs(piRatio.n)}π${piRatio.d === 1 ? '' : '/' + piRatio.d}`)
+        ? (piRatio.n === 0 ? '0'
+          : piRatio.d === 1
+            ? `${piRatio.n < 0 ? '-' : ''}${Math.abs(piRatio.n) === 1 ? '' : Math.abs(piRatio.n)}π`
+            : `${piRatio.n < 0 ? '-' : ''}\\frac{${Math.abs(piRatio.n) === 1 ? '' : Math.abs(piRatio.n)}π}{${piRatio.d}}`)
         : null;
       const exact = piExact || this.engine.toRadicalOrFraction(res);
       if (exact) {

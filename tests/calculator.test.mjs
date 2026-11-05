@@ -15,9 +15,10 @@ const between = (start, end) => {
 };
 const context = vm.createContext({ console, window: {}, document: {}, localStorage: {} });
 vm.runInContext(between('class MathEngine {', 'class CasioDisplay {') + '\n' +
+  between('class CasioDisplay {', 'window.casioDisplay = new CasioDisplay();') + '\n' +
   between('class CasioApp {', 'function initCasioWithParams()') + '\n' +
-  'globalThis.TestEngine = MathEngine; globalThis.TestApp = CasioApp;', context);
-const { TestEngine: MathEngine, TestApp: CasioApp } = context;
+  'globalThis.TestEngine = MathEngine; globalThis.TestDisplay = CasioDisplay; globalThis.TestApp = CasioApp;', context);
+const { TestEngine: MathEngine, TestDisplay: CasioDisplay, TestApp: CasioApp } = context;
 
 function calculator() {
   const app = Object.create(CasioApp.prototype);
@@ -104,6 +105,9 @@ test('CALC tính biểu thức có biến qua màn nhập giá trị x', () => {
   press(app, '3', 'EQUALS');
   approx(app.rawResult, 7);
   assert.equal(app.engine.variables.x, 3);
+  assert.equal(app.justCalculated, true);
+  assert.equal(app.displayResult, '7');
+  assert.equal(app.display.result, '7');
 });
 
 test('CALC hỏi từng biến, giữ nguyên biểu thức để tính lại', () => {
@@ -126,8 +130,27 @@ test('Rad: sin nghịch đảo 1/2 hiện pi/6 và vẫn lưu giá trị rad', (
   app.engine.setAngleMode('RAD');
   app.state.angleMode = 'RAD';
   press(app, 'SHIFT', 'sin', '0', '.', '5', 'EQUALS');
-  assert.equal(app.displayResult, 'π/6');
+  assert.equal(app.displayResult, '\\frac{π}{6}');
   approx(app.rawResult, Math.PI / 6);
+});
+
+test('phép toán chứa π rút gọn chính xác: π/3 + π/6 = π/2', () => {
+  const app = calculator();
+  app.expression = '\\frac{π}{3}+\\frac{π}{6}';
+  app.cursorPos = app.expression.length;
+  press(app, 'EQUALS');
+  assert.equal(app.displayResult, '\\frac{π}{2}');
+  approx(app.rawResult, Math.PI / 2);
+});
+
+test('kết quả phân số π được render theo dạng phân số dọc', () => {
+  const display = Object.create(CasioDisplay.prototype);
+  display.formatToNaturalHtml = text => text;
+  const htmlResult = display.formatResultHtml('\\frac{π}{6}');
+  assert.match(htmlResult, /casio-frac/);
+  assert.match(htmlResult, /frac-num/);
+  assert.match(htmlResult, /frac-den/);
+  assert.doesNotMatch(htmlResult, /π÷6/);
 });
 
 test('SOLVE tìm điểm đạo hàm x²−4x bằng 0', () => {
