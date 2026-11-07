@@ -4291,7 +4291,8 @@ class CasioApp {
       },
       cellR: 0,
       cellC: 0,
-      buffer: ''
+      buffer: '',
+      optionPage: 0
     };
 
     // Vector state
@@ -7432,13 +7433,23 @@ class CasioApp {
     `);
   }
 
+  openMatrixOptn() {
+    this.matrixState.optionPage = 0;
+    this.osState = 'MAT_OPTN';
+    this.renderMatrixOptn();
+  }
+
   renderMatrixOptn() {
     const isVi = this.display.language === 'VI';
-    this.display.renderList(isVi ? 'Phép tính Ma trận' : 'Matrix Calc', [
-      '1:Det(MatA)   2:MatA × MatB',
-      '3:MatA + MatB 4:Trn(MatA)',
-      '5:Inv(MatA)   6:Sửa Ma trận'
-    ], false, false);
+    const pages = isVi ? [
+      ['1:Det(MatA)', '2:MatA × MatB', '3:MatA + MatB'],
+      ['4:Trn(MatA)', '5:Inv(MatA)', '6:Sửa Ma trận']
+    ] : [
+      ['1:Det(MatA)', '2:MatA × MatB', '3:MatA + MatB'],
+      ['4:Trn(MatA)', '5:Inv(MatA)', '6:Edit Matrix']
+    ];
+    const page = this.matrixState.optionPage;
+    this.display.renderList(isVi ? 'Phép tính Ma trận' : 'Matrix Calc', pages[page], page > 0, page < pages.length - 1);
   }
 
   renderMatrixResult(title, contentHtml) {
@@ -7507,8 +7518,7 @@ class CasioApp {
       }
     } else if (this.osState === 'MAT_GRID') {
       if (key === 'optn') {
-        this.osState = 'MAT_OPTN';
-        this.renderMatrixOptn();
+        this.openMatrixOptn();
         return;
       }
       if (['0','1','2','3','4','5','6','7','8','9','.'].includes(key)) {
@@ -7570,11 +7580,15 @@ class CasioApp {
         return;
       }
       if (key === 'AC') {
-        this.osState = 'MAT_OPTN';
-        this.renderMatrixOptn();
+        this.openMatrixOptn();
         return;
       }
     } else if (this.osState === 'MAT_OPTN') {
+      if (key === 'UP' || key === 'DOWN') {
+        this.matrixState.optionPage = Math.max(0, Math.min(1, this.matrixState.optionPage + (key === 'DOWN' ? 1 : -1)));
+        this.renderMatrixOptn();
+        return;
+      }
       if (key === 'AC') {
         this.osState = 'MAT_GRID';
         this.renderMatrixGrid();
@@ -7640,8 +7654,7 @@ class CasioApp {
         return;
       }
       if (key === 'optn') {
-        this.osState = 'MAT_OPTN';
-        this.renderMatrixOptn();
+        this.openMatrixOptn();
         return;
       }
     }

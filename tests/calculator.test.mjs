@@ -32,6 +32,7 @@ function calculator() {
   app.history = [];
   app.historyIndex = -1;
   app.displayResult = '0';
+  app.matrixState = { activeMat: 'MatA', rows: 2, cols: 2, matrices: {}, cellR: 0, cellC: 0, buffer: '', optionPage: 0 };
   app.vectorState = { activeVct: 'VctA', dim: 3,
     vectors: { VctA: null, VctB: null, VctC: null, VctD: null }, vctAns: null,
     expression: '', optionPage: 0, optionFrom: 'VCT_CALC', selectAction: 'define', cellIdx: 0, buffer: '' };
@@ -42,7 +43,7 @@ function calculator() {
   app.menuSelected = 1;
   app.display = {
     language: 'VI', showView() {}, renderExpression() {}, setMode() {}, setResult(result) { this.result = result; },
-    updateIndicators(state) { this.stoVisible = state.sto; }, renderList(title, items) { this.title = title; this.items = items; },
+    updateIndicators(state) { this.stoVisible = state.sto; }, renderList(title, items, hasUp, hasDown) { this.title = title; this.items = items; this.hasUp = hasUp; this.hasDown = hasDown; },
     renderCustom(markup) { this.markup = markup; }, formatToNaturalHtml(text) { return text; }, setScrollArrows() {}, updateScrollArrows() {},
     renderMenu(selected, page) { this.selected = selected; this.page = page; }
   };
@@ -251,6 +252,35 @@ test('STO không lưu nếu biểu thức không hợp lệ', () => {
   press(app, 'STO', 'neg');
   assert.equal(app.engine.variables.A, 0);
   assert.equal(app.display.result, 'Math ERROR');
+});
+
+test('Matrix: nhập xong, OPTN xếp từng chức năng theo hàng và DOWN/UP lật trang', () => {
+  const app = calculator();
+  app.startMatrix();
+  press(app, '1', '2', '2');
+  assert.equal(app.osState, 'MAT_GRID');
+  press(app, '2', 'EQUALS', '3', 'EQUALS', '4', 'EQUALS', '5', 'EQUALS');
+  assert.deepEqual(Array.from(app.matrixState.matrices.MatA, row => Array.from(row)), [[2, 3], [4, 5]]);
+  press(app, 'optn');
+  assert.equal(app.osState, 'MAT_OPTN');
+  assert.deepEqual(Array.from(app.display.items), ['1:Det(MatA)', '2:MatA × MatB', '3:MatA + MatB']);
+  assert.equal(app.display.hasDown, true);
+  press(app, 'DOWN');
+  assert.equal(app.matrixState.optionPage, 1);
+  assert.deepEqual(Array.from(app.display.items), ['4:Trn(MatA)', '5:Inv(MatA)', '6:Sửa Ma trận']);
+  assert.equal(app.display.hasUp, true);
+  assert.equal(app.display.hasDown, false);
+  press(app, 'DOWN');
+  assert.equal(app.matrixState.optionPage, 1);
+  press(app, '4');
+  assert.equal(app.osState, 'MAT_RESULT');
+  assert.match(app.display.markup, /2, 4/);
+  press(app, 'optn', 'DOWN', 'UP');
+  assert.equal(app.matrixState.optionPage, 0);
+  press(app, '1');
+  assert.match(app.display.markup, /Det = -2/);
+  press(app, 'optn', 'DOWN', '6');
+  assert.equal(app.osState, 'MAT_SELECT');
 });
 
 test('Vector: màn kích thước hiển thị phím 2/3, phím 1 không hợp lệ', () => {
