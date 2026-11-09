@@ -283,6 +283,21 @@ test('Matrix: nhập xong, OPTN xếp từng chức năng theo hàng và DOWN/UP
   assert.equal(app.osState, 'MAT_SELECT');
 });
 
+test('Matrix: nghịch đảo ma trận 1×1 bằng nghịch đảo phần tử, ma trận suy biến báo lỗi', () => {
+  const app = calculator();
+  app.matrixState.matrices.MatC = [[2]];
+  app.matrixState.matrices.MatD = [[0]];
+  app.matrixState.activeMat = 'MatC';
+  app.osState = 'MAT_GRID';
+
+  press(app, 'optn', 'DOWN', '5', '3');
+  assert.match(app.display.markup, /MatC⁻¹/);
+  assert.match(app.display.markup, /\[ 0\.5 \]/);
+
+  press(app, 'optn', 'DOWN', '5', '4');
+  assert.match(app.display.markup, /Math ERROR/);
+});
+
 test('Matrix: Det, Trn và Inv cho phép chọn MatB thay vì mặc định MatA', () => {
   const app = calculator();
   app.matrixState.matrices.MatA = [[1, 0], [0, 1]];

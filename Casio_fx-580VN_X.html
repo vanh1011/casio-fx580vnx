@@ -2830,6 +2830,8 @@ class MathEngine {
     const det = this.matrixDet(M);
     if (Math.abs(det) < 1e-12) return null; // Singular
 
+    if (n === 1) return [[1 / det]];
+
     if (n === 2) {
       return [
         [M[1][1] / det, -M[0][1] / det],
