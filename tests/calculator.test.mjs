@@ -263,24 +263,53 @@ test('Matrix: nhập xong, OPTN xếp từng chức năng theo hàng và DOWN/UP
   assert.deepEqual(Array.from(app.matrixState.matrices.MatA, row => Array.from(row)), [[2, 3], [4, 5]]);
   press(app, 'optn');
   assert.equal(app.osState, 'MAT_OPTN');
-  assert.deepEqual(Array.from(app.display.items), ['1:Det(MatA)', '2:MatA × MatB', '3:MatA + MatB']);
+  assert.deepEqual(Array.from(app.display.items), ['1:Det(Mat?)', '2:MatA × MatB', '3:MatA + MatB']);
   assert.equal(app.display.hasDown, true);
   press(app, 'DOWN');
   assert.equal(app.matrixState.optionPage, 1);
-  assert.deepEqual(Array.from(app.display.items), ['4:Trn(MatA)', '5:Inv(MatA)', '6:Sửa Ma trận']);
+  assert.deepEqual(Array.from(app.display.items), ['4:Trn(Mat?)', '5:Inv(Mat?)', '6:Sửa Ma trận']);
   assert.equal(app.display.hasUp, true);
   assert.equal(app.display.hasDown, false);
   press(app, 'DOWN');
   assert.equal(app.matrixState.optionPage, 1);
-  press(app, '4');
+  press(app, '4', '1');
   assert.equal(app.osState, 'MAT_RESULT');
   assert.match(app.display.markup, /2, 4/);
   press(app, 'optn', 'DOWN', 'UP');
   assert.equal(app.matrixState.optionPage, 0);
-  press(app, '1');
+  press(app, '1', '1');
   assert.match(app.display.markup, /Det = -2/);
   press(app, 'optn', 'DOWN', '6');
   assert.equal(app.osState, 'MAT_SELECT');
+});
+
+test('Matrix: Det, Trn và Inv cho phép chọn MatB thay vì mặc định MatA', () => {
+  const app = calculator();
+  app.matrixState.matrices.MatA = [[1, 0], [0, 1]];
+  app.matrixState.matrices.MatB = [[2, 1], [3, 4]];
+  app.matrixState.activeMat = 'MatA';
+  app.osState = 'MAT_GRID';
+
+  press(app, 'optn', '1');
+  assert.equal(app.osState, 'MAT_OPERAND_SELECT');
+  assert.match(app.display.title, /Det/);
+  assert.match(app.display.items.join(' '), /2:MatB/);
+  press(app, '2');
+  assert.equal(app.osState, 'MAT_RESULT');
+  assert.match(app.display.markup, /Det\(MatB\)/);
+  assert.match(app.display.markup, /Det = 5/);
+
+  press(app, 'optn', 'DOWN', '4', '2');
+  assert.equal(app.osState, 'MAT_RESULT');
+  assert.match(app.display.markup, /Trn\(MatB\)/);
+  assert.match(app.display.markup, /2, 3/);
+  assert.match(app.display.markup, /1, 4/);
+
+  press(app, 'optn', 'DOWN', '5', '2');
+  assert.equal(app.osState, 'MAT_RESULT');
+  assert.match(app.display.markup, /MatB⁻¹/);
+  assert.match(app.display.markup, /0\.8, -0\.2/);
+  assert.match(app.display.markup, /-0\.6, 0\.4/);
 });
 
 test('Vector: màn kích thước hiển thị phím 2/3, phím 1 không hợp lệ', () => {

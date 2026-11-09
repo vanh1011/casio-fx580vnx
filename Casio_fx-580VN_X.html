@@ -4292,7 +4292,8 @@ class CasioApp {
       cellR: 0,
       cellC: 0,
       buffer: '',
-      optionPage: 0
+      optionPage: 0,
+      pendingOperation: null
     };
 
     // Vector state
@@ -7442,14 +7443,69 @@ class CasioApp {
   renderMatrixOptn() {
     const isVi = this.display.language === 'VI';
     const pages = isVi ? [
-      ['1:Det(MatA)', '2:MatA × MatB', '3:MatA + MatB'],
-      ['4:Trn(MatA)', '5:Inv(MatA)', '6:Sửa Ma trận']
+      ['1:Det(Mat?)', '2:MatA × MatB', '3:MatA + MatB'],
+      ['4:Trn(Mat?)', '5:Inv(Mat?)', '6:Sửa Ma trận']
     ] : [
-      ['1:Det(MatA)', '2:MatA × MatB', '3:MatA + MatB'],
-      ['4:Trn(MatA)', '5:Inv(MatA)', '6:Edit Matrix']
+      ['1:Det(Mat?)', '2:MatA × MatB', '3:MatA + MatB'],
+      ['4:Trn(Mat?)', '5:Inv(Mat?)', '6:Edit Matrix']
     ];
     const page = this.matrixState.optionPage;
     this.display.renderList(isVi ? 'Phép tính Ma trận' : 'Matrix Calc', pages[page], page > 0, page < pages.length - 1);
+  }
+
+  renderMatrixOperandSelect() {
+    const isVi = this.display.language === 'VI';
+    const operationNames = { det: 'Det', transpose: 'Trn', inverse: 'Inv' };
+    const operation = operationNames[this.matrixState.pendingOperation] || '';
+    this.display.renderList(`${operation}: ${isVi ? 'Chọn ma trận' : 'Select Matrix'}`, [
+      '1:MatA        2:MatB',
+      '3:MatC        4:MatD'
+    ], false, false);
+  }
+
+  startMatrixOperandSelect(operation) {
+    this.matrixState.pendingOperation = operation;
+    this.osState = 'MAT_OPERAND_SELECT';
+    this.renderMatrixOperandSelect();
+  }
+
+  executeUnaryMatrixOperation(matrixName) {
+    const matrix = this.matrixState.matrices[matrixName];
+    const operation = this.matrixState.pendingOperation;
+    this.matrixState.pendingOperation = null;
+    this.osState = 'MAT_RESULT';
+
+    if (!matrix) {
+      this.renderMatrixResult(matrixName, 'Data ERROR');
+      return;
+    }
+    if (operation === 'det') {
+      if (matrix.length !== matrix[0].length) {
+        this.renderMatrixResult(`Det(${matrixName})`, 'Dim ERROR');
+        return;
+      }
+      this.renderMatrixResult(`Det(${matrixName})`, `Det = ${this.engine.matrixDet(matrix)}`);
+      return;
+    }
+    if (operation === 'transpose') {
+      const result = this.engine.matrixTranspose(matrix);
+      const gridHtml = result.map(row => `[ ${row.join(', ')} ]`).join('<br>');
+      this.renderMatrixResult(`Trn(${matrixName})`, gridHtml);
+      return;
+    }
+    if (operation === 'inverse') {
+      if (matrix.length !== matrix[0].length) {
+        this.renderMatrixResult(`${matrixName}⁻¹`, 'Dim ERROR');
+        return;
+      }
+      const result = this.engine.matrixInverse(matrix);
+      if (result) {
+        const gridHtml = result.map(row => `[ ${row.join(', ')} ]`).join('<br>');
+        this.renderMatrixResult(`${matrixName}⁻¹`, gridHtml);
+      } else {
+        this.renderMatrixResult(`${matrixName}⁻¹`, 'Math ERROR (Det=0)');
+      }
+    }
   }
 
   renderMatrixResult(title, contentHtml) {
@@ -7597,9 +7653,7 @@ class CasioApp {
       const matA = this.matrixState.matrices.MatA || [[1,0],[0,1]];
       const matB = this.matrixState.matrices.MatB || [[1,0],[0,1]];
       if (key === '1') {
-        const d = this.engine.matrixDet(matA);
-        this.osState = 'MAT_RESULT';
-        this.renderMatrixResult('Det(MatA)', `Det = ${d}`);
+        this.startMatrixOperandSelect('det');
         return;
       }
       if (key === '2') {
@@ -7625,26 +7679,28 @@ class CasioApp {
         return;
       }
       if (key === '4') {
-        const trn = this.engine.matrixTranspose(matA);
-        this.osState = 'MAT_RESULT';
-        const gridHtml = trn.map(row => `[ ${row.join(', ')} ]`).join('<br>');
-        this.renderMatrixResult('Trn(MatA)', gridHtml);
+        this.startMatrixOperandSelect('transpose');
         return;
       }
       if (key === '5') {
-        const inv = this.engine.matrixInverse(matA);
-        this.osState = 'MAT_RESULT';
-        if (inv) {
-          const gridHtml = inv.map(row => `[ ${row.join(', ')} ]`).join('<br>');
-          this.renderMatrixResult('MatA⁻¹', gridHtml);
-        } else {
-          this.renderMatrixResult('MatA⁻¹', 'Math ERROR (Det=0)');
-        }
+        this.startMatrixOperandSelect('inverse');
         return;
       }
       if (key === '6') {
         this.osState = 'MAT_SELECT';
         this.renderMatrixSelect();
+        return;
+      }
+    } else if (this.osState === 'MAT_OPERAND_SELECT') {
+      if (key === 'AC') {
+        this.matrixState.pendingOperation = null;
+        this.osState = 'MAT_OPTN';
+        this.renderMatrixOptn();
+        return;
+      }
+      if (['1','2','3','4'].includes(key)) {
+        const map = { '1': 'MatA', '2': 'MatB', '3': 'MatC', '4': 'MatD' };
+        this.executeUnaryMatrixOperation(map[key]);
         return;
       }
     } else if (this.osState === 'MAT_RESULT') {
